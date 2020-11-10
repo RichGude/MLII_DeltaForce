@@ -7,3 +7,5 @@ The Delta Force Squard consists of:
   Rich Gude
 
 The purpose of this project to to analyze a ~3 hour video of dashboard-cam vehicle driving footage with a known driving speed and develop a machine learning model to predict the driving speed of a test set of footage.
+
+The dataset (and link) for the driving footage and known speeds are produced at: https://github.com/commaai/speedchallenge
