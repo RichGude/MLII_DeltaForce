@@ -7,8 +7,9 @@ import re
 # Create y_train labels
 ########################################
 
-os.chdir("data")
+print(os.getcwd())
 
+os.chdir("data")
 y_file = open("train.txt", "r")
 
 labels = []
