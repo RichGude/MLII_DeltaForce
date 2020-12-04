@@ -1,5 +1,6 @@
 import sys
 sys.path.append('/usr/local/lib/python2.7/site-packages')
+import tensorflow as tf
 
 import os
 import cv2
@@ -360,7 +361,7 @@ from keras.optimizers import Adam
 N_img_height = 66
 N_img_width = 220
 N_img_channels = 3
-plt.show()
+# plt.show()
 
 
 def nvidia_model():
@@ -451,7 +452,7 @@ train_generator = generate_training_data(train_data, BATCH)
 history = model.fit_generator(
         train_generator,
         steps_per_epoch = 400,
-        epochs = 25,
+        epochs = 2,
         callbacks = callbacks_list,
         verbose = 1,
         validation_data = valid_generator,
@@ -471,3 +472,12 @@ plt.legend(['training set', 'validation set'], loc='upper right')
 plt.show()
 plt.savefig('loss_over_training.png')
 plt.show()
+
+model.save('model.h5')
+model2 = tf.keras.models.load_model("model.h5")
+
+x_test = np.array(test_data)
+print("done with test array")
+print("test array shape:", x_test.shape)
+np.save("test_data2.npy", x_test)
+
