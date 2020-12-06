@@ -124,7 +124,7 @@ x_train, y_train, indices = [], [], []
 
 print("creating train array...")
 for path in [f for f in os.listdir(DATA_DIR) if f[-4:] == ".jpg"]:
-    x_train.append(cv2.imread(DATA_DIR + path))
+    x_train.append(cv2.resize(cv2.imread(DATA_DIR + path), (320, 240)))
     index = re.findall(r'\d+', path)
     y_train.append(labels[int(index[0])])
     indices.append(int(index[0]))
@@ -154,7 +154,7 @@ RESIZE_TO = 256
 x_test, indices = [], []
 print("creating test array...")
 for path in [f for f in os.listdir(DATA_DIR) if f[-4:] == ".jpg"]:
-    x_test.append(cv2.imread(DATA_DIR + path))
+    x_test.append(cv2.resize(cv2.imread(DATA_DIR + path), (320, 240)))
     index = re.findall(r'\d+', path)
     indices.append(int(index[0]))
     #print("Image", label.split('\n'))

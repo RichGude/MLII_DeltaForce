@@ -169,23 +169,23 @@ def crop_image(image, scale):
              3) resize to (66, 220, 3) if not done so already from perspective transform
     """
     # Crop out sky (top 130px) and the hood of the car (bottom 270px)
-    image_cropped = image[130:370, :]  # -> (240, 640, 3)
+    image_cropped = image[65:185, :]  # -> (240, 640, 3)
 
-    height = int(240 * scale)
-    width = int(640 * scale)
+    height = int(120 * scale)
+    width = int(320 * scale)
     image = cv2.resize(image_cropped, (220, 66), interpolation=cv2.INTER_AREA)
 
     return image
 
 def preprocess_image_valid_from_path(image_path, scale_factor=0.5):
-    img = cv2.resize(image_path, (256, 256))
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # img = cv2.resize(image_path, (320, 240))
+    img = cv2.cvtColor(image_path, cv2.COLOR_BGR2RGB)
     img = crop_image(img, scale_factor)
     return img
 
 def preprocess_image_from_path(image_path, scale_factor=0.5, bright_factor=1):
-    img = cv2.resize(image_path, (256, 256))
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    # img = cv2.resize(image_path, (320, 240))
+    img = cv2.cvtColor(image_path, cv2.COLOR_BGR2RGB)
     img = change_brightness(img, bright_factor)
     img = crop_image(img, scale_factor)
     return img
@@ -217,9 +217,11 @@ def generate_training_data(x_train, y_train, batch_size=16, scale_factor=0.5):
         label_batch[int((i / 2) % batch_size)] = avg_speed
 
         if not (((i / 2) + 1) % batch_size):
+
             yield image_batch, label_batch
         i += 2
         i = i % np.asarray(x_train).shape[0]
+
 
 
 def generate_validation_data(x_val, y_val, batch_size=16, scale_factor=0.5):
@@ -234,7 +236,6 @@ def generate_validation_data(x_val, y_val, batch_size=16, scale_factor=0.5):
         rgb_diff = opticalFlowDense(img1, img2)
         rgb_diff = rgb_diff.reshape(1, rgb_diff.shape[0], rgb_diff.shape[1], rgb_diff.shape[2])
         avg_speed = np.array([[np.mean([speed1, speed2])]])
-
         yield rgb_diff, avg_speed
 
 
@@ -352,10 +353,12 @@ callbacks_list = [modelCheckpoint]
 model = nvidia_model()
 train_size = len(y_train_data)
 train_generator = generate_training_data(x_train_data, y_train_data, BATCH)
+
+
 history = model.fit_generator(
         train_generator,
         steps_per_epoch = 400,
-        epochs = 2,
+        epochs = 25,
         callbacks = callbacks_list,
         verbose = 1,
         validation_data = valid_generator,
