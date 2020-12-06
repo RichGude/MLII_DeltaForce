@@ -88,8 +88,6 @@ y_test_data = list(map(float, y_test_data))
 
 
 
-
-
 def change_brightness(image, bright_factor):
     """
     Augments the brightness of the image by multiplying the saturation by a uniform random variable
