@@ -1,196 +1,158 @@
 import sys
+
 sys.path.append('/usr/local/lib/python2.7/site-packages')
-import tensorflow as tf
 
 import os
 import cv2
-import csv
-
-import random
 import numpy as np
 import pandas as pd
-
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import matplotlib.gridspec as gridspec
-
-from sklearn.model_selection import train_test_split
-from sklearn.utils import shuffle
-
-
-def capture_frames(video_source, speed_data):
-    '''
-    Captures .mp4 video frames to .jpg images and creates a .csv to store the capture information
-    '''
-
-    num_frames = speed_data.shape[0]
-
-    # create VideoCapture instance
-    cap = cv2.VideoCapture(video_source)
-    # set frame count
-    cap.set(cv2.CAP_PROP_FRAME_COUNT, num_frames)
-
-    with open('/home/ubuntu/Comma/MLII_DeltaForce/data/driving.csv', 'w') as csvfile:
-        fieldnames = ['image_path', 'frame', 'speed']
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        writer.writeheader()
-
-        for idx in range(num_frames):
-            # set frame index
-            cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-            # read the frame
-            success, image = cap.read()
-
-            if success:
-                image_path = os.path.join('/home/ubuntu/Comma/MLII_DeltaForce/data/trainingframes', str(idx) + '.jpg')
-
-                # save image to IMG folder
-                cv2.imwrite(image_path, image)
-
-                # write row to driving.csv
-                writer.writerow({'image_path': image_path,
-                                 'frame': idx,
-                                 'speed': speed_data[idx],
-                                 })
-            else:
-                print('Failed to read frame ', idx)
-
-        print('Done!')
+from keras.models import Sequential
+from keras.layers.convolutional import Convolution2D
+from keras.layers.pooling import MaxPooling2D
+from keras.layers.core import Activation, Dropout, Flatten, Dense, Lambda
+from keras.layers import ELU
+from keras.optimizers import Adam
+# import keras.backend.tensorflow_backend as KTF
+import tensorflow as tf
+import csv
 
 
-# capture_frames('/home/ubuntu/Comma/MLII_DeltaForce/data/train.mp4', np.loadtxt('/home/ubuntu/Comma/MLII_DeltaForce/data/train.txt'))
+N_img_height = 66
+N_img_width = 220
+N_img_channels = 3
 
 
-df = pd.read_csv('/home/ubuntu/Comma/MLII_DeltaForce/data/driving.csv')
-print(df.head(10))
-print()
+def nvidia_model():
+    inputShape = (N_img_height, N_img_width, N_img_channels)
 
-video_fps = 20
-times = np.asarray(df['frame'], dtype = np.float32) / video_fps
-speeds = np.asarray(df['speed'], dtype=np.float32)
-plt.plot(times, speeds, 'r-')
-plt.title('Speed vs Time')
-plt.xlabel('time (secs)')
-plt.ylabel('speed (mph)')
-plt.show()
+    model = Sequential()
+    # normalization
+    # perform custom normalization before lambda layer in network
+    model.add(Lambda(lambda x: x / 127.5 - 1, input_shape=inputShape))
 
-print(df.tail(5))
+    model.add(Convolution2D(24, (5, 5),
+                            strides=(2, 2),
+                            padding='valid',
+                            kernel_initializer='he_normal',
+                            name='conv1'))
+
+    model.add(ELU())
+    model.add(Convolution2D(36, (5, 5),
+                            strides=(2, 2),
+                            padding='valid',
+                            kernel_initializer='he_normal',
+                            name='conv2'))
+
+    model.add(ELU())
+    model.add(Convolution2D(48, (5, 5),
+                            strides=(2, 2),
+                            padding='valid',
+                            kernel_initializer='he_normal',
+                            name='conv3'))
+    model.add(ELU())
+    model.add(Dropout(0.5))
+    model.add(Convolution2D(64, (3, 3),
+                            strides=(1, 1),
+                            padding='valid',
+                            kernel_initializer='he_normal',
+                            name='conv4'))
+
+    model.add(ELU())
+    model.add(Convolution2D(64, (3, 3),
+                            strides=(1, 1),
+                            padding='valid',
+                            kernel_initializer='he_normal',
+                            name='conv5'))
+
+    model.add(Flatten(name='flatten'))
+    model.add(ELU())
+    model.add(Dense(100, kernel_initializer='he_normal', name='fc1'))
+    model.add(ELU())
+    model.add(Dense(50, kernel_initializer='he_normal', name='fc2'))
+    model.add(ELU())
+    model.add(Dense(10, kernel_initializer='he_normal', name='fc3'))
+    model.add(ELU())
+
+    # do not put activation at the end because we want to exact output, not a class identifier
+    model.add(Dense(1, name='output', kernel_initializer='he_normal'))
+
+    adam = Adam(lr=1e-4, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+    model.compile(optimizer=adam, loss='mse')
+
+    return model
+
+model = nvidia_model()
+model.load_weights('model-weights-Vtest3.h5')
 
 
-def batch_shuffle(dframe):
+def opticalFlowOverlay(image_current, image_next):
     """
-    Randomly shuffle pairs of rows in the dataframe, separates train and validation data
-    generates a uniform random variable 0->9, gives 20% chance to append to valid data, otherwise train_data
-    return tuple (train_data, valid_data) dataframes
+    input: image_currentdef preprocess_image_from_path(image_path, scale_factor=0.5, bright_factor=1):
+    img = cv2.imread(image_path)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = change_brightness(img, bright_factor)
+    img = crop_image(img, scale_factor)
+    return img, image_next (RGB images)
+    output: mask
     """
-    randomized_list = np.arange(len(dframe) - 1)
-    np.random.shuffle(randomized_list)
+    feature_params = dict(maxCorners=500,
+                          qualityLevel=0.1,
+                          minDistance=7,
+                          blockSize=5)
+    lk_params = dict(winSize=(15, 15),
+                     maxLevel=2,
+                     criteria=(cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
-    train_data = pd.DataFrame()
-    valid_data = pd.DataFrame()
-    test_data = pd.DataFrame()
+    image_current_saved = np.copy(image_current)
+    image_next_saved = np.copy(image_next)
 
-    for i in randomized_list:
-        idx1 = i
-        idx2 = i + 1
+    image_current = cv2.cvtColor(image_current, cv2.COLOR_RGB2GRAY)
+    image_next = cv2.cvtColor(image_next, cv2.COLOR_RGB2GRAY)
 
-        row1 = dframe.iloc[[idx1]].reset_index()
-        row2 = dframe.iloc[[idx2]].reset_index()
+    # Finds edges in an image using the [Canny86] algorithm.
+    p0 = cv2.goodFeaturesToTrack(image_current, mask=None, **feature_params)
 
-        randInt = np.random.randint(10)
-        if 0 <= randInt <= 1:
-            valid_frames = [valid_data, row1, row2]
-            valid_data = pd.concat(valid_frames, axis=0, join='outer', ignore_index=False)
-        if randInt == 2:
-            test_frames = [test_data, row1, row2]
-            test_data = pd.concat(test_frames, axis=0, join='outer', ignore_index=False)
-        if randInt > 2:
-            train_frames = [train_data, row1, row2]
-            train_data = pd.concat(train_frames, axis=0, join='outer', ignore_index=False)
-    return train_data, valid_data, test_data
+    p1, st, err = cv2.calcOpticalFlowPyrLK(image_current, image_next, p0, None, **lk_params)
 
+    color = np.random.randint(0, 255, (100, 3))
 
-# create training and validation set
-train_data, valid_data, test_data = batch_shuffle(df)
+    mask = np.zeros_like(image_current)
 
-# verify data size
-print('Training data size =', train_data.shape)
-print('Validation data size =', valid_data.shape)
-print('Test data size =', test_data.shape)
+    # Select good points
+    good_new = p1[st == 1]
+    good_old = p0[st == 1]
+    for i, (new, old) in enumerate(zip(good_new, good_old)):
+        a, b = new.ravel()  # flatten
+        c, d = old.ravel()
+        mask = cv2.arrowedLine(mask, (a, b), (c, d), color[i % 100].tolist(), 2, 8)
 
+        image_next = cv2.circle(image_next_saved, (a, b), 1, color[i % 100].tolist(), -1)
+        image_next_fg = cv2.bitwise_and(image_next, image_next, mask=mask)
 
-x = random.sample(range(1,len(train_data)), 15)
-
-plt.figure(1, figsize=(20,10))
-for i,value in enumerate(x):
-    img = mpimg.imread(train_data.iloc[value]['image_path'])
-    plt.subplot(3,5,i+1)
-    plt.xticks([])
-    plt.yticks([])
-    plt.imshow(img)
+    dst = cv2.add(image_next, image_next_fg)
+    return dst
 
 
-def change_brightness(image, bright_factor):
+def crop_image(image, scale):
     """
-    Augments the brightness of the image by multiplying the saturation by a uniform random variable
-    Input: image (RGB)
-    returns: image with brightness augmentation
+    preprocesses the image
+
+    input: image (480 (y), 640 (x), 3) RGB
+    output: image (shape is (66, 220, 3) as RGB)
+
+    This stuff is performed on my validation data and my training data
+    Process:
+             1) Cropping out black spots
+             3) resize to (66, 220, 3) if not done so already from perspective transform
     """
+    # Crop out sky (top 130px) and the hood of the car (bottom 270px)
+    image_cropped = image[130:370, :]  # -> (240, 640, 3)
 
-    hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-    # perform brightness augmentation only on the second channel
-    hsv_image[:, :, 2] = hsv_image[:, :, 2] * bright_factor
+    height = int(240 * scale)
+    width = int(640 * scale)
+    image = cv2.resize(image_cropped, (220, 66), interpolation=cv2.INTER_AREA)
 
-    # change back to RGB
-    image_rgb = cv2.cvtColor(hsv_image, cv2.COLOR_HSV2RGB)
-    return image_rgb
-
-
-img1 = mpimg.imread(train_data.iloc[34]['image_path'])
-img2 = mpimg.imread(train_data.iloc[23]['image_path'])
-
-rgb_diff = cv2.cvtColor(img1, cv2.COLOR_BGR2RGB) - cv2.cvtColor(img2, cv2.COLOR_BGR2RGB)
-hsv_diff = cv2.cvtColor(img1, cv2.COLOR_RGB2HSV) - cv2.cvtColor(img2, cv2.COLOR_RGB2HSV)
-sat = cv2.cvtColor(img1, cv2.COLOR_BGR2HSV)[:,:,1] - cv2.cvtColor(img2, cv2.COLOR_BGR2HSV)[:,:,1]
-inv_sat = cv2.cvtColor(img2, cv2.COLOR_BGR2HSV)[:,:,1]*-1
-hue = cv2.cvtColor(img2, cv2.COLOR_BGR2HSV)[:,:,0]
-
-plt.figure(1, figsize=(20,10))
-
-plt.subplot(2,3,1)
-plt.xticks([])
-plt.yticks([])
-plt.imshow(img2)
-
-plt.subplot(2,3,2)
-plt.xticks([])
-plt.yticks([])
-plt.imshow(inv_sat)
-plt.show()
-
-plt.subplot(2,3,3)
-plt.xticks([])
-plt.yticks([])
-plt.imshow(sat)
-plt.show()
-
-plt.subplot(2,3,4)
-plt.xticks([])
-plt.yticks([])
-plt.imshow(hue)
-plt.show()
-
-plt.subplot(2,3,5)
-plt.xticks([])
-plt.yticks([])
-plt.imshow(rgb_diff)
-plt.show()
-
-plt.subplot(2,3,6)
-plt.xticks([])
-plt.yticks([])
-plt.imshow(hsv_diff)
-plt.show()
+    return image
 
 
 def opticalFlowDense(image_current, image_next):
@@ -246,134 +208,130 @@ def opticalFlowDense(image_current, image_next):
 
     return rgb_flow
 
-img1 = mpimg.imread(train_data.iloc[0]['image_path'])
-img2 = mpimg.imread(train_data.iloc[1]['image_path'])
 
-rgb_diff = opticalFlowDense(img1,img2)
-plt.xticks([])
-plt.yticks([])
-plt.imshow(rgb_diff)
-plt.show()
-
-
-def crop_image(image, scale):
-    """
-    preprocesses the image
-
-    input: image (480 (y), 640 (x), 3) RGB
-    output: image (shape is (66, 220, 3) as RGB)
-
-    This stuff is performed on my validation data and my training data
-    Process:
-             1) Cropping out black spots
-             3) resize to (66, 220, 3) if not done so already from perspective transform
-    """
-    # Crop out sky (top 130px) and the hood of the car (bottom 270px)
-    image_cropped = image[130:370, :]  # -> (240, 640, 3)
-
-    height = int(240 * scale)
-    width = int(640 * scale)
-    image = cv2.resize(image_cropped, (220, 66), interpolation=cv2.INTER_AREA)
-
-    return image
-
-def preprocess_image_valid_from_path(image_path, scale_factor=0.5):
-    img = cv2.imread(image_path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = crop_image(img, scale_factor)
-    return img
 
 def preprocess_image_from_path(image_path, scale_factor=0.5, bright_factor=1):
     img = cv2.imread(image_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = change_brightness(img, bright_factor)
     img = crop_image(img, scale_factor)
     return img
 
-img = preprocess_image_from_path(train_data.iloc[404]['image_path'])
-img_next = preprocess_image_from_path(train_data.iloc[405]['image_path'])
 
-plt.figure()
-plt.imshow(img)
-plt.figure()
-plt.imshow(img_next)
-plt.show()
+def capture_frames(video_source):
+    '''
+    Captures .mp4 video frames to .jpg images and creates a .csv to store the capture information
+    '''
 
-rgb_flow = opticalFlowDense(img,img_next)
-plt.figure()
-plt.imshow(rgb_flow)
-plt.show()
+    num_frames = 10798
 
+    # create VideoCapture instance
+    cap = cv2.VideoCapture(video_source)
+    # set frame count
+    cap.set(cv2.CAP_PROP_FRAME_COUNT, num_frames)
 
-def generate_training_data(data, batch_size=16, scale_factor=0.5):
-    # sample an image from the data to compute image size
-    img = preprocess_image_from_path(train_data.iloc[1]['image_path'], scale_factor)
+    with open('./data/predict.csv', 'w') as csvfile:
+        fieldnames = ['image_path', 'frame', 'speed']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
 
-    # create empty batches
-    image_batch = np.zeros((batch_size, img.shape[0], img.shape[1], img.shape[2]))
-    label_batch = np.zeros(batch_size)
-    i = 0
+        for idx in range(num_frames):
+            # set frame index
+            cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+            # read the frame
+            success, image = cap.read()
 
-    while True:
-        speed1 = data.iloc[i]['speed']
-        speed2 = data.iloc[i + 1]['speed']
+            if success:
+                image_path = os.path.join('./data/test_frames/', str(idx) + '.jpg')
 
-        bright_factor = 0.2 + np.random.uniform()
-        img1 = preprocess_image_from_path(data.iloc[i]['image_path'], scale_factor, bright_factor)
-        img2 = preprocess_image_from_path(data.iloc[i + 1]['image_path'], scale_factor, bright_factor)
+                # save image to IMG folder
+                cv2.imwrite(image_path, image)
 
-        rgb_flow_diff = opticalFlowDense(img1, img2)
-        avg_speed = np.mean([speed1, speed2])
+                # write row to driving.csv
+                writer.writerow({'image_path': image_path,
+                                 'frame': idx,
+                                 })
+            else:
+                print('Failed to read frame ', idx)
 
-        image_batch[int((i / 2) % batch_size)] = rgb_flow_diff
-        label_batch[int((i / 2) % batch_size)] = avg_speed
+        print()
 
-        if not (((i / 2) + 1) % batch_size):
-            yield image_batch, label_batch
-        i += 2
-        i = i % data.shape[0]
+# capture_frames('/home/ubuntu/Comma/MLII_DeltaForce/data/test.mp4')
 
 
-def generate_validation_data(data, batch_size=16, scale_factor=0.5):
-    i = 0
-    while i < len(data):
-        speed1 = data.iloc[i]['speed']
-        speed2 = data.iloc[i + 1]['speed']
+data = pd.read_csv('./data/driving.csv')
+print(data.head(10))
 
-        img1 = preprocess_image_from_path(data.iloc[i]['image_path'], scale_factor)
-        img2 = preprocess_image_from_path(data.iloc[i + 1]['image_path'], scale_factor)
+for i in range(len(data) - 1):
+    y1 = data.iloc[i]['speed']
+    y2 = data.iloc[i + 1]['speed']
 
-        rgb_diff = opticalFlowDense(img1, img2)
-        rgb_diff = rgb_diff.reshape(1, rgb_diff.shape[0], rgb_diff.shape[1], rgb_diff.shape[2])
-        avg_speed = np.array([[np.mean([speed1, speed2])]])
+    x1 = preprocess_image_from_path(data.iloc[i]['image_path'])
+    x2 = preprocess_image_from_path(data.iloc[i + 1]['image_path'])
 
-        yield rgb_diff, avg_speed
+    img1 = cv2.cvtColor(cv2.imread(data.iloc[i]['image_path']), cv2.COLOR_BGR2RGB)
+    img2 = cv2.cvtColor(cv2.imread(data.iloc[i + 1]['image_path']), cv2.COLOR_BGR2RGB)
+
+    rgb_diff = opticalFlowDense(x1, x2)
+    rgb_diff = rgb_diff.reshape(1, rgb_diff.shape[0], rgb_diff.shape[1], rgb_diff.shape[2])
+    avg_speed = np.array([[np.mean([y1, y2])]])
+
+    prediction = model.predict(rgb_diff)
+    error = abs(prediction - y2)
+    truth = y2
+
+    predict_path = os.path.join('./data/predict/', str(i) + '.jpg')
+
+    dst = np.copy(img2)
+
+    dst = opticalFlowOverlay(img1, img2)  # This is a sparse optical flow overlay
+
+    # to write new image via openCV
+    offset = 50
+    FONT_SIZE = 1
+    THICKNESS = 2
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    cv2.putText(dst, 'pred: ' + str(prediction[0][0])[:5], (10, offset), font, FONT_SIZE, (255, 250, 40), THICKNESS,
+                cv2.LINE_AA)
+    cv2.putText(dst, 'truth: ' + str(y2)[:5], (10, offset + 50), font, FONT_SIZE, (35, 255, 70), THICKNESS, cv2.LINE_AA)
+    cv2.putText(dst, 'error: ' + str(error[0][0])[:5], (10, offset + 100), font, FONT_SIZE, (255, 120, 80), THICKNESS,
+                cv2.LINE_AA)
+
+    # convert back to BGR for writing
+    dst = cv2.cvtColor(dst, cv2.COLOR_RGB2BGR)
+    cv2.imwrite(predict_path, dst)
+
+print('done!')
+
+from moviepy.editor import VideoFileClip
+from moviepy.editor import ImageSequenceClip
+import glob
+import os
+
+images = ['./data/predict/' + str(i+1) + '.jpg' for i in range(0, 10798)]
+clip = ImageSequenceClip(images, fps=60)
+clip.write_videofile("predicted_speed_fast.mp4", fps=60)
+print('done!')
 
 
-from keras.models import Sequential
-from keras.layers.convolutional import Convolution2D
-from keras.layers.pooling import MaxPooling2D
-from keras.layers.core import Activation, Dropout, Flatten, Dense, Lambda
-from keras.layers import ELU
-from keras.optimizers import Adam
-# import keras.backend.tensorflow_backend as KTF
-
-N_img_height = 66
-N_img_width = 220
-N_img_channels = 3
-# plt.show()
 
 
-test_data = np.load('test_data2.npy', allow_pickle=True)
-print(test_data.shape)
-
-model2 = tf.keras.models.load_model("model.h5")
 
 
-BATCH = 16
-test_generator = generate_training_data(test_data, BATCH)
 
 
-prediction = model2.predict(test_generator)
-print(prediction)  # will be a list in a list.
 
+
+#
+# test_data = np.load('test_data2.npy', allow_pickle=True)
+# print(test_data.shape)
+#
+# model2 = tf.keras.models.load_model("model.h5")
+#
+#
+# BATCH = 16
+# test_generator = generate_training_data(test_data, BATCH)
+#
+#
+# prediction = model2.predict(test_generator)
+# print(prediction)  # will be a list in a list.
+#
