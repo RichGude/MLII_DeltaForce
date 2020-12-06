@@ -21,96 +21,96 @@ y_file.close()
 ########################################
 # Extract images from train video
 ########################################
-#
-# # read in the video
-# # https://www.geeksforgeeks.org/extract-images-from-video-in-python/
-#
-# train = cv2.VideoCapture(os.getcwd()+"/train.mp4")
-#
-# try:
-#     # creating a folder named data
-#     if "train" not in os.listdir():
-#         os.mkdir('train')
-#
-#     # if not created then raise error
-# except OSError:
-#     print('Error: Creating directory of data')
-# print(os.listdir())
-#
-# # frame
-# currentframe = 0
-#
-# DATA_DIR = os.getcwd() + "/train/"
-#
-# while (True):
-#
-#     # reading from frame
-#     ret, frame = train.read()
-#     if ret:
-#
-#         # if video is still left continue creating images
-#         name = './train/frame' + str(currentframe) + '.jpg'
-#         print('Creating...' + name)
-#
-#         # writing the extracted images
-#         cv2.imwrite(name, frame)
-#
-#         # increasing counter so that it will
-#         # show how many frames are created
-#         currentframe += 1
-#     else:
-#         break
-#
-# # Release all space and windows once done
-# train.release()
-# cv2.destroyAllWindows()
-#
-# ########################################
-# # Extract images from test video
-# ########################################
-#
-# # read in the video
-# # https://www.geeksforgeeks.org/extract-images-from-video-in-python/
-#
-# train = cv2.VideoCapture(os.getcwd()+"/test.mp4")
-#
-# try:
-#     # creating a folder named data
-#     if "test" not in os.listdir():
-#         os.mkdir('test')
-#
-#     # if not created then raise error
-# except OSError:
-#     print('Error: Creating directory of data')
-# print(os.listdir())
-#
-# # frame
-# currentframe = 0
-#
-# DATA_DIR = os.getcwd() + "/test/"
-#
-# while (True):
-#
-#     # reading from frame
-#     ret, frame = train.read()
-#     if ret:
-#
-#         # if video is still left continue creating images
-#         name = './test/frame' + str(currentframe) + '.jpg'
-#         print('Creating...' + name)
-#
-#         # writing the extracted images
-#         cv2.imwrite(name, frame)
-#
-#         # increasing counter so that it will
-#         # show how many frames are created
-#         currentframe += 1
-#     else:
-#         break
-#
-# # Release all space and windows once done
-# train.release()
-# cv2.destroyAllWindows()
+
+# read in the video
+# https://www.geeksforgeeks.org/extract-images-from-video-in-python/
+
+train = cv2.VideoCapture(os.getcwd()+"/train.mp4")
+
+try:
+    # creating a folder named data
+    if "train" not in os.listdir():
+        os.mkdir('train')
+
+    # if not created then raise error
+except OSError:
+    print('Error: Creating directory of data')
+print(os.listdir())
+
+# frame
+currentframe = 0
+
+DATA_DIR = os.getcwd() + "/train/"
+
+while (True):
+
+    # reading from frame
+    ret, frame = train.read()
+    if ret:
+
+        # if video is still left continue creating images
+        name = './train/frame' + str(currentframe) + '.jpg'
+        print('Creating...' + name)
+
+        # writing the extracted images
+        cv2.imwrite(name, frame)
+
+        # increasing counter so that it will
+        # show how many frames are created
+        currentframe += 1
+    else:
+        break
+
+# Release all space and windows once done
+train.release()
+cv2.destroyAllWindows()
+
+########################################
+# Extract images from test video
+########################################
+
+# read in the video
+# https://www.geeksforgeeks.org/extract-images-from-video-in-python/
+
+train = cv2.VideoCapture(os.getcwd()+"/test.mp4")
+
+try:
+    # creating a folder named data
+    if "test" not in os.listdir():
+        os.mkdir('test')
+
+    # if not created then raise error
+except OSError:
+    print('Error: Creating directory of data')
+print(os.listdir())
+
+# frame
+currentframe = 0
+
+DATA_DIR = os.getcwd() + "/test/"
+
+while (True):
+
+    # reading from frame
+    ret, frame = train.read()
+    if ret:
+
+        # if video is still left continue creating images
+        name = './test/frame' + str(currentframe) + '.jpg'
+        print('Creating...' + name)
+
+        # writing the extracted images
+        cv2.imwrite(name, frame)
+
+        # increasing counter so that it will
+        # show how many frames are created
+        currentframe += 1
+    else:
+        break
+
+# Release all space and windows once done
+train.release()
+cv2.destroyAllWindows()
 
 ########################################
 # Create numpy array of train set
