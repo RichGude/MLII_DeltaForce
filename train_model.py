@@ -16,8 +16,7 @@ from tqdm import tqdm       # for SWEET importing visuals!
 
 from keras import Model
 from keras.layers import Maximum, Input, Conv2D
-from keras.layers.core import Activation, Dropout, Flatten, Dense, Lambda
-from keras.layers import ELU
+from keras.layers.core import Dropout, Flatten, Dense, Lambda
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
 
