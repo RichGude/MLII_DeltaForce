@@ -10,6 +10,8 @@ The purpose of this project to to analyze a ~3 hour video of dashboard-cam vehic
 
 The dataset (and link) for the driving footage and known speeds are produced at: https://github.com/commaai/speedchallenge.
 
+Our code borrowed from Millin Gabani's tutorial found here: https://github.com/millingab/deeps/blob/master/Full%20Article.md.
+
 # Instructions for how to run the code
 If you are interested in running our code, this is the order to run it in:
 
@@ -25,4 +27,4 @@ If you are interested in running our code, this is the order to run it in:
       - This file performs the batch shuffling to create the test file that we use as an input to our predict function. If you want to re-train our model, this step is not necessary
       
 5). predict.py
-      - This file performs predictions on both the test dataset we created in the preprocess.py and on Rich's video. The Mean Squared Error is spit out, as well as a graph of the accuracy of the predictions.
+      - This file performs predictions on both the test dataset we created in the preprocess.py and on Rich's video. The Mean Squared Error is spit out, as well as a graph of the accuracy of the predictions, as shown in train_test_results.png and rich_test_results.png.
