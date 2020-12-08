@@ -30,9 +30,9 @@ from sklearn.metrics import mean_squared_error
 cwd = os.getcwd()
 
 # load test data (this data is shuffled dense-flow image pairs from the original training frames)
-x_testL = np.load('x_testL.npy')
-x_testR = np.load('x_testR.npy')
-y_test = np.load('y_test.npy')
+x_testL = np.load('./data/x_testL.npy')
+x_testR = np.load('./data/x_testR.npy')
+y_test = np.load('./data/y_test.npy')
 
 # load test data (this data is non-shuffled dense-flow image pairs from the rich car frames)
 x_richL = np.load('./data/x_richL.npy')

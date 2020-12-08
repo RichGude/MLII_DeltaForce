@@ -49,7 +49,7 @@ currentframe = 0
 
 DATA_DIR = os.getcwd() + "/train/"
 
-while False:      # Change to 'True' when reimplementing frame reading
+while True:      # Change to 'True' when reimplementing frame reading
 
     # reading from frame
     ret, frame = train.read()

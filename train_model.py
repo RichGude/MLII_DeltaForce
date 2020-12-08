@@ -244,7 +244,7 @@ y_train_pre = np.load("./data/y_train.npy")
 # Augment data:
 STEP_SIZE = 5           # Step size of 5 equates to a 0.25 s gap between images
 x_trainL, x_trainR, y_train, x_testL, x_testR, y_test, x_validL, x_validR, y_valid = batch_shuffle(x_train_pre, y_train_pre, STEP_SIZE)
-np.save("x_testL.npy", x_testL); np.save("x_testR.npy", x_testR); np.save("y_test.npy", y_test)
+np.save("./data/x_testL.npy", x_testL); np.save("./data/x_testR.npy", x_testR); np.save("./data/y_test.npy", y_test)
 # Verify data size
 print('Training data size =\t', np.asarray(x_trainL).shape)
 print('Validation data size =\t', np.asarray(x_validL).shape)

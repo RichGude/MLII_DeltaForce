@@ -250,7 +250,6 @@ y_rich = y_rich[indices_sorted]
 
 # run data through pre-processing function:
 x_richL, x_richR, y_rich = test_batch_shuffle(x_rich, y_rich)
-print(x_rich)
 print("done with rich_test array")
 np.save("x_richL.npy", x_richL); np.save("x_richR.npy", x_richR); np.save("y_rich.npy", y_rich)
 
