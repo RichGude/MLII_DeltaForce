@@ -1,0 +1,2 @@
+*.mp4 filter=lfs diff=lfs merge=lfs -text
+test_RichCar_video.mp4 filter=lfs diff=lfs merge=lfs -text
