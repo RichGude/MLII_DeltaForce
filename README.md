@@ -22,7 +22,7 @@ If you are interested in running our code, this is the order to run it in:
 3). If you want to retrain the model, run train_model.py. If not, skip this step.
 
 4). preprocess_predict.py
-      - This file performs thte batch shuffling to create the test file that we use as an input to our predict function.
+      - This file performs the batch shuffling to create the test file that we use as an input to our predict function. If you want to re-train our model, this step is not necessary
       
 5). predict.py
       - This file performs predictions on both the test dataset we created in the preprocess.py and on Rich's video. The Mean Squared Error is spit out, as well as a graph of the accuracy of the predictions.
