@@ -21,10 +21,13 @@ from keras.layers import Maximum, Input, Conv2D
 from keras.layers.core import Dropout, Flatten, Dense, Lambda
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
+from sklearn.metrics import mean_squared_error
+
 
 ########################################
 # Extract images from train video
 ########################################
+cwd = os.getcwd()
 
 # load test data (this data is shuffled dense-flow image pairs from the original training frames)
 x_testL = np.load('x_testL.npy')
@@ -56,6 +59,7 @@ plt.ylabel('Car Speed (mph)')
 plt.title('Actual versus Predicted Car Speeds from Training Footage')
 plt.legend()
 plt.show()
+print(mean_squared_error(y_test, y_pred))
 
 plt.savefig('train_test_results.png')
 
@@ -69,4 +73,5 @@ plt.legend()
 plt.show()
 
 plt.savefig('rich_test_results.png')
+print(mean_squared_error(y_rich, y_pred_rich))
 

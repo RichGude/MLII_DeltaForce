@@ -176,16 +176,16 @@ for line in y_file:
     labels.append(stripped_line)
 
 y_file.close()
+print(labels)
 
 # read in the video
 # https://www.geeksforgeeks.org/extract-images-from-video-in-python/
-
 testVid = cv2.VideoCapture(os.getcwd()+"/test_RichCar_video.mp4")
-
+print(testVid)
 try:
     # creating a folder named data
-    if "test" not in os.listdir():
-        os.mkdir('test')
+    if "rich_test" not in os.listdir():
+        os.mkdir('rich_test')
 
     # if not created then raise error
 except OSError:
@@ -195,16 +195,16 @@ print(os.listdir())
 # frame
 currentframe = 0
 
-DATA_DIR = os.getcwd() + "/test/"
+DATA_DIR = os.getcwd() + "/rich_test/"
 
-while False:      # Change to 'True' when reimplementing frame reading
+while True:      # Change to 'True' when reimplementing frame reading
 
     # reading from frame
     ret, frame = testVid.read()
     if ret:
 
         # if video is still left continue creating images
-        name = './test/frame' + str(currentframe) + '.jpg'
+        name = './rich_test/frame' + str(currentframe) + '.jpg'
         print('Creating...' + name)
 
         # writing the extracted images
@@ -225,7 +225,7 @@ cv2.destroyAllWindows()
 # Create numpy array of train set
 ########################################
 
-DATA_DIR = os.getcwd() + "/test/"
+DATA_DIR = os.getcwd() + "/rich_test/"
 # Set resize to same as training data
 RESIZE_WID = int(640/2)
 RESIZE_HGT = int(480/8)        # Height is less important than width for movement vectoring
@@ -235,10 +235,12 @@ x_rich, y_rich, indices = [], [], []
 print("creating train array...")
 for path in tqdm([f for f in os.listdir(DATA_DIR) if f[-4:] == ".jpg"]):
     # images are imported as (480, 640, 3) shape images.  That's enormous, so resize to 1/16 the size
-    x_rich.append(cv2.resize(cv2.imread(DATA_DIR + path), (RESIZE_WID, RESIZE_HGT)))
     index = re.findall(r'\d+', path)
-    y_rich.append(labels[int(index[0])])
-    indices.append(int(index[0]))
+    if int(index[0]) < 3600:
+        x_rich.append(cv2.resize(cv2.imread(DATA_DIR + path), (RESIZE_WID, RESIZE_HGT)))
+        #print(int(index[0]))
+        y_rich.append(labels[int(index[0])])
+        indices.append(int(index[0]))
 
 x_rich, y_rich, indices = np.array(x_rich), np.array(y_rich), np.array(indices)
 
@@ -248,7 +250,7 @@ y_rich = y_rich[indices_sorted]
 
 # run data through pre-processing function:
 x_richL, x_richR, y_rich = test_batch_shuffle(x_rich, y_rich)
-
+print(x_rich)
 print("done with rich_test array")
 np.save("x_richL.npy", x_richL); np.save("x_richR.npy", x_richR); np.save("y_rich.npy", y_rich)
 

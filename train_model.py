@@ -20,6 +20,8 @@ from keras.layers.core import Dropout, Flatten, Dense, Lambda
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
 
+import matplotlib.pyplot as plt
+
 """ Potential Process:
 The training data is a video of the dashboard view of a car engaging in interstate and city travel.
 The model needs to takes the static images of this video, captured at 20 fps, for 17 minutes (20,400 images)
@@ -242,7 +244,7 @@ y_train_pre = np.load("./data/y_train.npy")
 # Augment data:
 STEP_SIZE = 5           # Step size of 5 equates to a 0.25 s gap between images
 x_trainL, x_trainR, y_train, x_testL, x_testR, y_test, x_validL, x_validR, y_valid = batch_shuffle(x_train_pre, y_train_pre, STEP_SIZE)
-
+np.save("x_testL.npy", x_testL); np.save("x_testR.npy", x_testR); np.save("y_test.npy", y_test)
 # Verify data size
 print('Training data size =\t', np.asarray(x_trainL).shape)
 print('Validation data size =\t', np.asarray(x_validL).shape)
@@ -266,7 +268,7 @@ inputR = Input(shape=inputShape)
 leftMdl = Lambda(lambda x: x / 127.5 - 1)(inputL)       # perform custom normalization before lambda layer in network
 # Three layers of 2D convolutional layers
 leftMdl = Conv2D(24, (5, 5),            # output channels = 24, and kernel size = 5x5 shrinking the dimensions
-                 strides=(2, 2),
+                 strides=(2, 2),        #
                  padding='valid',       # input shape does NOT have the same shape as the output
                  activation='elu',      # use ELU, vice ReLu, for dense-flow
                  kernel_initializer='he_normal')(leftMdl)
@@ -349,10 +351,17 @@ modelCheckpoint = ModelCheckpoint(filepath,
 
 # Define final model parameters:
 EPOCHS = 30
-model.fit(x=[x_trainL, x_trainR], y=y_train,
+history = model.fit(x=[np.array(x_trainL), np.array(x_trainR)], y=np.array(y_train),
           batch_size=10,
-          validation_data=([x_validL, x_validR], y_valid),
+          validation_data=([np.array(x_validL), np.array(x_validR)], np.array(y_valid)),
           epochs=EPOCHS, callbacks=[modelCheckpoint])
+
+#plt.plot(history.history['mean_squared_error'])
+#plt.show()
+plt.plot(history.history['loss'], label='train')
+plt.plot(history.history['val_loss'], label='test')
+plt.legend()
+plt.show()
 
 # The model weights (that are considered the best) are loaded into the model.
 model.load_weights(filepath)
