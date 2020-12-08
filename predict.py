@@ -59,7 +59,7 @@ plt.ylabel('Car Speed (mph)')
 plt.title('Actual versus Predicted Car Speeds from Training Footage')
 plt.legend()
 plt.show()
-print(mean_squared_error(y_test, y_pred))
+print("Final MSE on test set:", mean_squared_error(y_test, y_pred))
 
 plt.savefig('train_test_results.png')
 
@@ -73,5 +73,5 @@ plt.legend()
 plt.show()
 
 plt.savefig('rich_test_results.png')
-print(mean_squared_error(y_rich, y_pred_rich))
+print("Final MSE on Rich's video:", mean_squared_error(y_rich, y_pred_rich))
 
